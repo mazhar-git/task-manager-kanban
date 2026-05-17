@@ -220,14 +220,9 @@ Kanban Board
 
 # 📸 Screenshots
 
-Add your screenshots here.
 
-Example:
 
-```md
-<img width="1359" height="648" alt="1 Dashboard" src="https://github.com/user-attachments/assets/7815918a-9e5a-4a4a-9108-919d0a6a99bd" />
 
-```
 
 ---
 
