@@ -7,7 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="wwwroot\index.html" />
+    <Content Remove="wwwroot\react\.env" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\react\.env" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,6 +23,10 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\screenshots\" />
   </ItemGroup>
 
 </Project>

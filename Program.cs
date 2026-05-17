@@ -31,11 +31,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     //For Local
-    //app.UseSwagger();
-    //app.UseSwaggerUI();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 
     // For Production
-    app.UsePathBase("/TaskManagerAPI");
+    //app.UsePathBase("/TaskManagerAPI");
 
     app.UseSwagger();
 

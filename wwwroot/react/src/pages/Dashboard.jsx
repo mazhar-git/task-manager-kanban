@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import StatCard from '../components/StatCard';
+import API_BASE_URL from "../api/api";
 /*import TasksChart from '../components/TasksChart';*/
 
 //For Local Development, change the API_URL to your backend URL if different
-const API_URL = 'https://localhost:7222/api';
-//For Production, use the relative path
-//const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = API_BASE_URL;
+console.log(API_URL);
 
 export default function Dashboard({ currentUser }) {
     const [stats, setStats] = useState({
@@ -31,6 +31,7 @@ export default function Dashboard({ currentUser }) {
             const tasksResponse = await axios.get(`${API_URL}/tasks`);
             const usersResponse = await axios.get(`${API_URL}/users`);
 
+            
             setTasks(tasksResponse.data);
             setUsers(usersResponse.data);
             calculateStats(tasksResponse.data);
