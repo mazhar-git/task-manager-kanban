@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    @apply bg-slate-900 text-white;
+}
+
+.column {
+    min-height: 500px;
+}
+
+.task-card {
+    @apply transition-all duration-200 ease-in-out;
+}
+
+.task-card:hover {
+    @apply -translate-y-0.5;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}

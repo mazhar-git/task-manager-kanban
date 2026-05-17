@@ -1,0 +1,754 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Manager Kanban</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="text/javascript">
+        
+        function setupLoggedInUser() {
+
+            const currentUser =
+                JSON.parse(localStorage.getItem("user"));
+
+            if (!currentUser) {
+
+                window.location.href = "login.html";
+
+                return;
+            }
+
+            document.getElementById("loggedUserName")
+                .innerText = currentUser.name;
+        }
+
+        function logout() {
+
+            localStorage.removeItem("user");
+
+            window.location.href = "login.html";
+        }
+    </script>
+    <style>
+        body {
+            background: #0f172a;
+        }
+
+        .column {
+            min-height: 500px;
+        }
+
+        .task-card {
+            transition: all 0.2s ease;
+        }
+
+            .task-card:hover {
+                transform: translateY(-2px);
+            }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="text-white min-h-screen">
+
+    <!-- HEADER -->
+    <div class="flex justify-between items-center px-8 py-5 border-b border-slate-700">
+
+        <!-- LEFT -->
+        <div>
+            <h1 class="text-3xl font-bold">
+                Task Manager
+            </h1>
+
+            <p class="text-slate-400 text-sm mt-1">
+                Kanban Board
+            </p>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="flex items-center gap-4">
+
+            <button id="createTaskBtn"
+                    onclick="openCreateModal()"
+                    class="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-lg font-medium shadow-lg">
+                + Create Task
+            </button>
+
+            <div class="text-sm text-slate-300">
+                Welcome,
+                <span id="loggedUserName"
+                      class="font-semibold"></span>
+            </div>
+
+            <button onclick="logout()"
+                    class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-medium shadow-lg">
+                Logout
+            </button>
+
+        </div>
+
+    </div>
+    <div id="filterContainer" class="px-6 mt-4">
+        <div class="px-6 mt-4">
+            <select id="filterUser"
+                    onchange="filterTasks()"
+                    class="bg-slate-800 border border-slate-700 rounded-lg p-3">
+
+                <option value="">All Users</option>
+
+            </select>
+
+        </div>
+    </div>
+    <!-- BOARD -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+
+        <!-- TODO -->
+        <div class="bg-slate-800 rounded-2xl p-4 shadow-xl">
+
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-bold text-lg">
+                    To Do
+                </h2>
+
+                <span class="bg-slate-700 px-2 py-1 rounded text-sm">
+                    <span id="todo-count">0</span>
+                </span>
+            </div>
+
+            <div id="todo"
+                 class="column space-y-3"
+                 ondrop="drop(event)"
+                 ondragover="allowDrop(event)">
+            </div>
+        </div>
+
+        <!-- IN PROGRESS -->
+        <div class="bg-slate-800 rounded-2xl p-4 shadow-xl">
+
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-bold text-lg text-yellow-400">
+                    In Progress
+                </h2>
+
+                <span class="bg-slate-700 px-2 py-1 rounded text-sm">
+                    <span id="progress-count">0</span>
+                </span>
+            </div>
+
+            <div id="inprogress"
+                 class="column space-y-3"
+                 ondrop="drop(event)"
+                 ondragover="allowDrop(event)">
+            </div>
+        </div>
+
+        <!-- DONE -->
+        <div class="bg-slate-800 rounded-2xl p-4 shadow-xl">
+
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-bold text-lg text-green-400">
+                    Done
+                </h2>
+
+                <span class="bg-slate-700 px-2 py-1 rounded text-sm">
+                    <span id="done-count">0</span>
+                </span>
+            </div>
+
+            <div id="done"
+                 class="column space-y-3"
+                 ondrop="drop(event)"
+                 ondragover="allowDrop(event)">
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL -->
+    <div id="taskModal"
+         class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+
+        <div class="bg-slate-900 w-[450px] rounded-2xl p-6 shadow-2xl border border-slate-700">
+
+            <div class="flex justify-between items-center mb-5">
+                <h2 id="modalTitle" class="text-2xl font-bold">
+                    Create Task
+                </h2>
+
+                <button onclick="closeModal()"
+                        class="text-slate-400 hover:text-white text-2xl">
+                    ×
+                </button>
+            </div>
+
+            <div class="space-y-4">
+
+                <input id="title"
+                       type="text"
+                       placeholder="Task Title"
+                       class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 outline-none focus:border-blue-500" />
+
+                <textarea id="description"
+                          placeholder="Description"
+                          class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 outline-none focus:border-blue-500">
+                </textarea>
+
+                <div class="grid grid-cols-2 gap-3">
+
+                    <select id="priority"
+                            class="bg-slate-800 border border-slate-700 rounded-lg p-3">
+
+                        <option value="Low">Low Priority</option>
+                        <option value="Medium">Medium Priority</option>
+                        <option value="High">High Priority</option>
+
+                    </select>
+
+                    <select id="status"
+                            class="bg-slate-800 border border-slate-700 rounded-lg p-3">
+
+                        <option value="Todo">Todo</option>
+                        <option value="InProgress">In Progress</option>
+                        <option value="Done">Done</option>
+
+                    </select>
+
+                </div>
+
+                <select id="assignedTo"
+                        class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3">
+
+                    <option value="">Select Developer</option>
+
+                </select>
+
+                <div class="grid grid-cols-2 gap-3">
+
+                    <input id="estimatedHours"
+                           type="number"
+                           placeholder="Estimated Hours"
+                           class="bg-slate-800 border border-slate-700 rounded-lg p-3" />
+
+                    <input id="dueDate"
+                           type="date"
+                           class="bg-slate-800 border border-slate-700 rounded-lg p-3" />
+
+                </div>
+
+                <button id="saveBtn" onclick="saveTask()"
+                        class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold">
+                    Create Task
+                </button>
+                <button id="deleteBtn"
+                        onclick="deleteTask()"
+                        class="w-full bg-red-600 hover:bg-red-700 py-3 rounded-lg font-semibold hidden">
+                    Delete Task
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        const API_URL = "https://localhost:7222/api/tasks";
+        const USERS_API = "https://localhost:7222/api/users";
+
+        let tasks = [];
+        let currentTaskId = null;
+
+        // LOAD TASKS
+        async function loadTasks() {
+
+            try {
+
+                const currentUser =
+                    JSON.parse(localStorage.getItem("user"));
+
+                let url = API_URL;
+
+                // Developer → only own tasks
+                if (currentUser.role === "Developer") {
+                    url = `${API_URL}/my/${currentUser.id}`;
+                }
+
+                // Admin → all tasks
+                const res = await fetch(url);
+
+                if (!res.ok) {
+
+                    console.error(await res.text());
+
+                    return;
+                }
+
+
+                tasks = await res.json();
+
+                renderTasks();
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // LOAD USERS
+        async function loadUsers() {
+
+            const res = await fetch(USERS_API);
+
+            const users = await res.json();
+
+            const dropdown =
+                document.getElementById("assignedTo");
+
+            const filterDropdown =
+                document.getElementById("filterUser");
+            filterDropdown.innerHTML =
+                `<option value="">All Users</option>`;
+
+            dropdown.innerHTML =
+                `<option value="">Select Developer</option>`;
+
+            users.forEach(user => {
+
+                dropdown.innerHTML += `
+                                                                    <option value="${user.id}">
+                                                                        ${user.name}
+                                                                    </option>
+                                                                `;
+                filterDropdown.innerHTML += `
+                                                                    <option value="${user.id}">
+                                                                        ${user.name}
+                                                                     </option>
+                                                                `;
+            });
+        }
+
+        // RENDER TASKS
+        function renderFilteredTasks(taskList = tasks) {
+
+            document.getElementById("todo").innerHTML = "";
+            document.getElementById("inprogress").innerHTML = "";
+            document.getElementById("done").innerHTML = "";
+
+            let todoCount = 0;
+            let progressCount = 0;
+            let doneCount = 0;
+
+            taskList.forEach(task => {
+
+                const card = document.createElement("div");
+
+                let priorityColor = "bg-green-500";
+
+                if (task.priority === "Medium")
+                    priorityColor = "bg-yellow-500";
+
+                if (task.priority === "High")
+                    priorityColor = "bg-red-500";
+
+                card.className =
+                    "task-card bg-slate-700 rounded-xl p-4 shadow cursor-move";
+
+                card.draggable = true;
+                card.id = "task-" + task.id;
+                card.ondragstart = drag;
+                card.onclick = () => openEditModal(task);
+                card.innerHTML = `
+
+                                                                    <div class="flex justify-between items-start mb-3">
+
+                                                                        <div class="font-semibold text-lg">
+                                                                            ${task.title}
+                                                                        </div>
+
+                                                                        <div class="${priorityColor} text-xs px-2 py-1 rounded-full">
+                                                                            ${task.priority}
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                    <div class="text-sm text-slate-300 mb-4">
+                                                                        ${task.description || ""}
+                                                                    </div>
+
+                                                                    <div class="flex justify-between items-center text-xs text-slate-400">
+
+                                                                        <div>
+                                                                            👤 ${task.assignedUser?.name || "Unassigned"}
+                                                                        </div>
+
+                                                                        <div>
+                                                                            ⏱ ${task.estimatedHours || 0}h
+                                                                        </div>
+
+                                                                    </div>
+                                                                `;
+
+                if (task.status === "Todo") {
+
+                    document.getElementById("todo")
+                        .appendChild(card);
+
+                    todoCount++;
+                }
+
+                else if (task.status === "InProgress") {
+
+                    document.getElementById("inprogress")
+                        .appendChild(card);
+
+                    progressCount++;
+                }
+
+                else {
+
+                    document.getElementById("done")
+                        .appendChild(card);
+
+                    doneCount++;
+                }
+            });
+
+            document.getElementById("todo-count")
+                .innerText = todoCount;
+
+            document.getElementById("progress-count")
+                .innerText = progressCount;
+
+            document.getElementById("done-count")
+                .innerText = doneCount;
+        }
+
+        // DRAG
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+        }
+
+        // DROP
+        async function drop(ev) {
+
+            ev.preventDefault();
+
+            const data =
+                ev.dataTransfer.getData("text");
+
+            const taskId =
+                data.split("-")[1];
+
+            let dropZone = ev.target;
+
+            while (
+                dropZone &&
+                dropZone.id !== "todo" &&
+                dropZone.id !== "inprogress" &&
+                dropZone.id !== "done"
+            ) {
+                dropZone = dropZone.parentElement;
+            }
+
+            if (!dropZone) return;
+
+            dropZone.appendChild(
+                document.getElementById(data)
+            );
+
+            let statusValue = "Todo";
+
+            if (dropZone.id === "inprogress")
+                statusValue = "InProgress";
+
+            if (dropZone.id === "done")
+                statusValue = "Done";
+
+            const task =
+                tasks.find(t => t.id == taskId);
+
+            task.status = statusValue;
+
+            const res =
+                await fetch(`${API_URL}/${taskId}`, {
+
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify(task)
+                });
+
+            if (!res.ok) {
+                console.error(await res.text());
+            }
+
+            loadTasks();
+        }
+
+        function openCreateModal() {
+
+            currentTaskId = null;
+
+            document.getElementById("modalTitle")
+                .innerText = "Create Task";
+
+            document.getElementById("saveBtn")
+                .innerText = "Create Task";
+
+            document.getElementById("deleteBtn")
+                .classList.add("hidden");
+
+            // Clear fields
+            document.getElementById("title").value = "";
+            document.getElementById("description").value = "";
+            document.getElementById("priority").value = "Low";
+            document.getElementById("status").value = "Todo";
+            document.getElementById("assignedTo").value = "";
+            document.getElementById("estimatedHours").value = "";
+            document.getElementById("dueDate").value = "";
+
+            openModal();
+        }
+
+        // OPEN MODAL
+        function openModal() {
+
+            document.getElementById("taskModal")
+                .classList.remove("hidden");
+
+            document.getElementById("taskModal")
+                .classList.add("flex");
+        }
+
+        // CLOSE MODAL
+        function closeModal() {
+
+            document.getElementById("taskModal")
+                .classList.add("hidden");
+
+            document.getElementById("taskModal")
+                .classList.remove("flex");
+        }
+
+        //Edit Modal
+        function openEditModal(task) {
+
+            currentTaskId = task.id;
+
+            document.getElementById("modalTitle")
+                .innerText = "Edit Task";
+
+            document.getElementById("saveBtn")
+                .innerText = "Update Task";
+
+            // Delete button code
+            const currentUser =
+                JSON.parse(localStorage.getItem("user"));
+
+            if (currentUser.role === "Admin") {
+
+                document.getElementById("deleteBtn")
+                    .classList.remove("hidden");
+            }
+            else {
+
+                document.getElementById("deleteBtn")
+                    .classList.add("hidden");
+            }
+            //End Delete button code
+
+            document.getElementById("title").value =
+                task.title;
+
+            document.getElementById("description").value =
+                task.description;
+
+            document.getElementById("priority").value =
+                task.priority;
+
+            document.getElementById("status").value =
+                task.status;
+
+            document.getElementById("assignedTo").value =
+                task.assignedTo || "";
+
+            document.getElementById("estimatedHours").value =
+                task.estimatedHours || 0;
+
+            if (task.dueDate) {
+
+                document.getElementById("dueDate").value =
+                    task.dueDate.split("T")[0];
+            }
+
+            openModal();
+        }
+
+        // SAVE TASK
+        async function saveTask() {
+
+            const task = {
+
+                id: currentTaskId,
+
+                title:
+                    document.getElementById("title").value,
+
+                description:
+                    document.getElementById("description").value,
+
+                priority:
+                    document.getElementById("priority").value,
+
+                status:
+                    document.getElementById("status").value,
+
+                assignedTo:
+                    document.getElementById("assignedTo").value
+                        ? parseInt(document.getElementById("assignedTo").value)
+                        : null,
+
+                estimatedHours:
+                    parseInt(document.getElementById("estimatedHours").value) || 0,
+
+                dueDate:
+                    document.getElementById("dueDate").value
+            };
+
+            let url = API_URL;
+            let method = "POST";
+
+            if (currentTaskId) {
+
+                url = `${API_URL}/${currentTaskId}`;
+
+                method = "PUT";
+            }
+
+            const res = await fetch(url, {
+
+                method: method,
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(task)
+            });
+
+            if (!res.ok) {
+
+                console.error(await res.text());
+
+                alert("Failed to save task");
+
+                return;
+            }
+
+            closeModal();
+
+            loadTasks();
+        }
+
+        async function deleteTask() {
+
+            if (!confirm("Delete this task?"))
+                return;
+
+            const currentUser =
+                JSON.parse(localStorage.getItem("user"));
+
+            const res = await fetch(
+                `${API_URL}/${currentTaskId}?userId=${currentUser.id}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+            if (!res.ok) {
+
+                console.error(await res.text());
+
+                alert("Failed to delete");
+
+                return;
+            }
+
+            closeModal();
+
+            loadTasks();
+        }
+
+        function filterTasks() {
+
+            const userId =
+                document.getElementById("filterUser").value;
+
+            if (!userId) {
+                console.log(userId);
+                renderTasks();
+
+                return;
+            }
+
+            const filtered =
+                tasks.filter(t => t.assignedTo == userId);
+
+            renderFilteredTasks(filtered);
+        }
+        function renderTasks() {
+            renderFilteredTasks(tasks);
+        }
+
+        function setupRoleUI() {
+
+            const currentUser =
+                JSON.parse(localStorage.getItem("user"));
+
+            // Admin
+            if (currentUser.role === "admin") {
+
+                // Show filter dropdown
+                document.getElementById("filterContainer")
+                    .style.display = "block";
+
+                // Show create button
+                document.getElementById("createTaskBtn")
+                    .style.display = "block";
+            }
+
+
+            // Developer
+            else {
+
+                // Hide filter dropdown
+                document.getElementById("filterContainer")
+                    .style.display = "none";
+
+                // Hide create button
+                document.getElementById("createTaskBtn")
+                    .style.display = "none";
+            }
+        }
+        setupLoggedInUser();
+        setupRoleUI();
+        loadTasks();
+        loadUsers();
+
+    </script>
+
+</body>
+</html>
