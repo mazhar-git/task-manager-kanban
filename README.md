@@ -219,9 +219,7 @@ Kanban Board
 ---
 
 # 📸 Screenshots
-
-
-
+ ![Image Alt](https://github.com/mazhar-git/task-manager-kanban/blob/a70bee18f3f6289c94f464b19559231a6d1dc6ea/wwwroot/screenshots/1.Dashboard.png)
 
 
 ---
