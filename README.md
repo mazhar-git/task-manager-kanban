@@ -220,13 +220,9 @@ Kanban Board
 
 # 📸 Screenshots
 
-Add your screenshots here.
 
-Example:
 
-```md
-![Dashboard](screenshots/dashboard.png)
-```
+
 
 ---
 
